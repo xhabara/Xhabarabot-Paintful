@@ -6,3 +6,4 @@ Click canvas to activate
 SPACE to start/pause drawing
 LEFT ARROW to clear canvas
 MOUSE PRESSED to intensify sound
+S to save drawing
