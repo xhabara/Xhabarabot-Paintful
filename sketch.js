@@ -6,6 +6,10 @@ let lines = [];
 let thicknessSlider;
 let lineColor;
 let eraserButton;
+let autonomousMode = false;
+let lastPoint = null;
+
+
 
 function preload() {
   mySound1 = loadSound("RullyShabaraSampleL13.mp3");
@@ -60,6 +64,16 @@ thicknessSlider.style('border-radius', '4px');
 thicknessSlider.style('outline', 'none');
 thicknessSlider.style('cursor', 'pointer');
 thicknessSlider.position(140, 15);
+  
+let autonomousButton = createButton("XHABARABOT TAKEOVER");
+autonomousButton.position(310, 12);
+autonomousButton.mousePressed(() => {
+  autonomousMode = !autonomousMode;
+  autonomousButton.html(autonomousMode ? "STOP XHABARABOT MODE" : "XHABARABOT TAKEOVER");
+});
+
+
+  
 
 }
 
@@ -104,13 +118,17 @@ function keyPressed() {
   }
 }
 
+function drawLine(x1, y1, x2, y2) {
+  let distance = dist(x1, y1, x2, y2);
+  let thickness = map(distance, 1, 200, 2, 8);
+  strokeWeight(thicknessSlider.value());
+  stroke(lineColor);
+  line(x1, y1, x2, y2);
+  return { x1, y1, x2, y2, thickness: thicknessSlider.value(), color: lineColor };
+}
 function draw() {
   if (!shapeGenerationPaused) {
-    let distance = dist(mouseX, mouseY, pmouseX, pmouseY);
-    let thickness = map(distance, 1, 200, 2, 8);
-    strokeWeight(thicknessSlider.value());
-    stroke(lineColor);
-    line(mouseX, mouseY, pmouseX, pmouseY);
+    drawLine(mouseX, mouseY, pmouseX, pmouseY);
   }
 
   // Draw all the lines in the lines array
@@ -120,46 +138,51 @@ function draw() {
     strokeWeight(line.thickness);
   }
 
+if (autonomousMode) {
+  let x = noise(frameCount * 0.01) * width;
+  let y = noise(frameCount * 0.01 + 1000) * height;
+
+  if (lastPoint) {
+    beginShape();
+    strokeWeight(thicknessSlider.value());
+    stroke(lineColor);
+    vertex(lastPoint.x, lastPoint.y);
+    vertex(x, y);
+    endShape();
+  }
+
+  lastPoint = { x, y };
+
+  mySound1.rate(map(x, 0, width, 0.5, 2));
+  mySound2.rate(map(y, 0, height, 0, 1));
+  mySound3.rate(map(x + y, 0, width + height, 0, 1));
+  mySound4.rate(map(x - y, 0, width - height, 0, 1));
+} else {
+  lastPoint = null; 
   mySound1.rate(map(mouseX, 0, width, 0.5, 2));
   mySound1.setVolume(mouseIsPressed ? 10 : 0);
   mySound2.rate(map(mouseX, 0, width, 0, 1));
   mySound2.setVolume(mouseIsPressed ? 10 : 2);
-
   mySound3.rate(map(mouseX, 0.5, width, 0, 1));
   mySound3.setVolume(mouseIsPressed ? 10 : 1);
-
   mySound4.rate(map(mouseX, 0.5, width, 0, 1));
   mySound4.setVolume(mouseIsPressed ? 20 : 0);
 }
 
+
+
 function mousePressed() {
   if (!shapeGenerationPaused) {
-    let distance = dist(mouseX, mouseY, pmouseX, pmouseY);
-    let thickness = map(distance, 0, 200, 5, 5);
-    lines.push({
-      x1: pmouseX,
-      y1: pmouseY,
-      x2: mouseX,
-      y2: mouseY,
-      thickness: thickness,
-      color: lineColor,
-    });
+    lines.push(drawLine(pmouseX, pmouseY, mouseX, mouseY));
   }
 }
 
 function mouseReleased() {
   if (!shapeGenerationPaused) {
-    let lineObj = {
-      x1: pmouseX,
-      y1: pmouseY,
-      x2: mouseX,
-      y2: mouseY,
-      color: lineColor,
-      thickness: thicknessSlider.value(),
-    };
-    lines.push(lineObj);
+    lines.push(drawLine(pmouseX, pmouseY, mouseX, mouseY));
   }
 }
+
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   background(400);
@@ -170,4 +193,5 @@ function windowResized() {
     strokeWeight(line.thickness);
     line(line.x1, line.y1, line.x2, line.y2);
   }
+}
 }
