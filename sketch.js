@@ -143,6 +143,21 @@ if (autonomousMode) {
   let y = noise(frameCount * 0.01 + 1000) * height;
 
   if (lastPoint) {
+    let speed = dist(x, y, lastPoint.x, lastPoint.y);
+
+    // Trigger sounds based on speed
+    if (speed > 5) { // Adjust the threshold as needed
+      mySound1.setVolume(10);
+      mySound2.setVolume(10);
+      mySound3.setVolume(10);
+      mySound4.setVolume(20);
+    } else {
+      mySound1.setVolume(0);
+      mySound2.setVolume(2);
+      mySound3.setVolume(1);
+      mySound4.setVolume(0);
+    }
+
     beginShape();
     strokeWeight(thicknessSlider.value());
     stroke(lineColor);
