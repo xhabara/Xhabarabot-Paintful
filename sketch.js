@@ -126,7 +126,43 @@ function drawLine(x1, y1, x2, y2) {
   line(x1, y1, x2, y2);
   return { x1, y1, x2, y2, thickness: thicknessSlider.value(), color: lineColor };
 }
+
 function draw() {
+  let drawingSpeed = 0;
+  let x, y;
+
+  if (autonomousMode) {
+    x = noise(frameCount * 0.01) * width;
+    y = noise(frameCount * 0.01 + 1000) * height;
+
+    if (lastPoint) {
+      beginShape();
+      strokeWeight(thicknessSlider.value());
+      stroke(lineColor);
+      vertex(lastPoint.x, lastPoint.y);
+      vertex(x, y);
+      endShape();
+      drawingSpeed = dist(x, y, lastPoint.x, lastPoint.y);
+    }
+
+    lastPoint = { x, y };
+  } else {
+    lastPoint = null;
+  }
+
+  if (mouseIsPressed && !shapeGenerationPaused) {
+    lines.push(drawLine(pmouseX, pmouseY, mouseX, mouseY));
+    drawingSpeed = dist(mouseX, mouseY, pmouseX, pmouseY);
+  }
+
+  // Set the volume based on drawing speed
+  let volume = map(drawingSpeed, 0, 100, 0, 12); // Adjust the mapping as needed
+
+  mySound1.setVolume(0.01);
+  mySound2.setVolume(2);
+  mySound3.setVolume(0.5);
+  mySound4.setVolume(0.9);
+  
   if (!shapeGenerationPaused) {
     drawLine(mouseX, mouseY, pmouseX, pmouseY);
   }
@@ -138,65 +174,48 @@ function draw() {
     strokeWeight(line.thickness);
   }
 
-if (autonomousMode) {
-  let x = noise(frameCount * 0.01) * width;
-  let y = noise(frameCount * 0.01 + 1000) * height;
-
-  if (lastPoint) {
-    let speed = dist(x, y, lastPoint.x, lastPoint.y);
-
-    // Trigger sounds based on speed
-    if (speed > 5) { // Adjust the threshold as needed
-      mySound1.setVolume(10);
-      mySound2.setVolume(10);
-      mySound3.setVolume(10);
-      mySound4.setVolume(20);
-    } else {
-      mySound1.setVolume(0);
-      mySound2.setVolume(2);
-      mySound3.setVolume(1);
-      mySound4.setVolume(0);
-    }
-
-    beginShape();
-    strokeWeight(thicknessSlider.value());
-    stroke(lineColor);
-    vertex(lastPoint.x, lastPoint.y);
-    vertex(x, y);
-    endShape();
+  if (autonomousMode) {
+    // Autonomous sound control
+    mySound1.rate(map(x, 0, width, 0.5, 2));
+    mySound2.rate(map(y, 0, height, 0, 1));
+    mySound3.rate(map(x + y, 0, width + height, 0, 1));
+    mySound4.rate(map(x - y, 0, width - height, 0, 1));
+  } else {
+    // Manual sound control
+    mySound1.rate(map(mouseX, 0, width, 0.5, 2));
+    mySound2.rate(map(mouseX, 0, width, 0, 1));
+    mySound3.rate(map(mouseX, 0.5, width, 0, 1));
+    mySound4.rate(map(mouseX, 0.5, width, 0, 1.5));
   }
-
-  lastPoint = { x, y };
-
-  mySound1.rate(map(x, 0, width, 0.5, 2));
-  mySound2.rate(map(y, 0, height, 0, 1));
-  mySound3.rate(map(x + y, 0, width + height, 0, 1));
-  mySound4.rate(map(x - y, 0, width - height, 0, 1));
-} else {
-  lastPoint = null; 
-  mySound1.rate(map(mouseX, 0, width, 0.5, 2));
-  mySound1.setVolume(mouseIsPressed ? 10 : 0);
-  mySound2.rate(map(mouseX, 0, width, 0, 1));
-  mySound2.setVolume(mouseIsPressed ? 10 : 2);
-  mySound3.rate(map(mouseX, 0.5, width, 0, 1));
-  mySound3.setVolume(mouseIsPressed ? 10 : 1);
-  mySound4.rate(map(mouseX, 0.5, width, 0, 1));
-  mySound4.setVolume(mouseIsPressed ? 20 : 0);
 }
-
-
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 function mousePressed() {
   if (!shapeGenerationPaused) {
+    mySound4.setVolume(25);
+    mySound1.setVolume(25);// Set the volume of mySound1 to maximum or any desired level
     lines.push(drawLine(pmouseX, pmouseY, mouseX, mouseY));
   }
 }
 
+
 function mouseReleased() {
   if (!shapeGenerationPaused) {
+    mySound4.setVolume(0.9);
+    mySound1.setVolume(0.001);// Return the volume of mySound1 to its original state
     lines.push(drawLine(pmouseX, pmouseY, mouseX, mouseY));
   }
 }
+
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
@@ -208,5 +227,5 @@ function windowResized() {
     strokeWeight(line.thickness);
     line(line.x1, line.y1, line.x2, line.y2);
   }
-}
+
 }
